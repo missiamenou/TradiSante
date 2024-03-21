@@ -12,7 +12,7 @@ class ApiService {
       var response = await http.get(url);
 
       if (response.statusCode == 200) {
-        data = json.decode(response.body);
+        List<dynamic> data = json.decode(response.body);
         return data.map((e) {
           return Item(
             nomProduit: e["nomProduit"],
@@ -45,30 +45,30 @@ class ApiService {
   }
 
   static Future<List<Item>> fetchCarousselProducts() async {
-    var url = Uri.parse('http://s-p5.com/komi/tradi_sante/caroussel.php');
-    try {
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        return data.map((e) {
-          return Item(
-            nomProduit: e["nomProduit"],
-            maladie: e["maladie"],
-            prix: e["prix"],
-            categorie: e["categorie"],
-            description: e["description"],
-            dateCreation: DateTime.parse(e["date_creation"]),
-            image: "http://s-p5.com/komi/tradi_sante/${e['image']}",
-          );
-        }).toList();
-      } else {
-        print(
-            'Erreur lors de la requête au serveur. Code d\'état : ${response.statusCode}');
-        return [];
-      }
-    } catch (e) {
-      print('Une erreur s\'est produite : $e');
+  var url = Uri.parse('http://s-p5.com/komi/tradi_sante/caroussel.php');
+  try {
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body);
+      return data.map((e) {
+        return Item(
+          nomProduit: e["nomProduit"],
+          maladie: e["maladie"],
+          prix: e["prix"],
+          categorie: e["categorie"],
+          description: e["description"],
+          dateCreation: DateTime.parse(e["date_creation"]),
+          image: "http://s-p5.com/komi/tradi_sante/${e['image']}",
+        );
+      }).toList();
+    } else {
+      print(
+          'Erreur lors de la requête au serveur. Code d\'état : ${response.statusCode}');
       return [];
     }
+  } catch (e) {
+    print('Une erreur s\'est produite : $e');
+    return [];
   }
+}
 }

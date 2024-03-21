@@ -13,6 +13,7 @@ import 'package:client/partieA/login/item.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:get/get.dart';
 import "item.dart";
 import "dart:convert";
@@ -33,41 +34,56 @@ class _AccueilClientState extends State<AccueilClient> {
   late List<Item> products = []; // Initialisez la liste des produits
   late List<Item> productsCaroussel = []; // Initialisez la liste des produits
   String selectedCategory = "";
-  var maVariable;
-  List<Map<String, String>> dataList = [
-    {
-      "nomProduit": "komjhji",
-      "maladie": "do,jnkjvey",
-      "categorie": 'tatdffa',
-      "description": "grpfff3",
-      "image": "ma phoffto",
-      "prix": "4000f"
-    },
-    {
-      "nomProduit": "komi2",
-      "maladie": "dovey2",
-      "categorie": 'gl2',
-      "description": "grp2",
-      "image": "ma phofffffhhto",
-      "prix": "3000f"
-    },
-    {
-      "nomProduit": "komi3",
-      "maladie": "dovey3",
-      "categorie": 'tata3',
-      "description": "grp3",
-      "image": "ma photo3",
-      "prix": "1000"
-    },
-    {
-      "nomProduit": "komi4",
-      "maladie": "dovey4",
-      "categorie": 'tata4',
-      "description": "grp4",
-      "image": "ma photo4",
-      "prix": "5000"
-    },
-  ];
+  TextEditingController _searchController = TextEditingController();
+  //gerer la recherche
+  void _performSearch() async {
+    String searchTerm = _searchController.text.toLowerCase();
+    List<Item> allProducts = await ApiService.fetchCarousselProducts();
+
+    // Filtrer les produits en fonction du terme de recherche dans le nom du produit
+    List<Item> searchResults = allProducts
+        .where((item) => item.nomProduit.toLowerCase().contains(searchTerm))
+        .toList();
+
+    setState(() {
+      this.products = searchResults;
+    });
+  }
+  // var maVariable;
+  // List<Map<String, String>> dataList = [
+  //   {
+  //     "nomProduit": "komjhji",
+  //     "maladie": "do,jnkjvey",
+  //     "categorie": 'tatdffa',
+  //     "description": "grpfff3",
+  //     "image": "ma phoffto",
+  //     "prix": "4000f"
+  //   },
+  //   {
+  //     "nomProduit": "komi2",
+  //     "maladie": "dovey2",
+  //     "categorie": 'gl2',
+  //     "description": "grp2",
+  //     "image": "ma phofffffhhto",
+  //     "prix": "3000f"
+  //   },
+  //   {
+  //     "nomProduit": "komi3",
+  //     "maladie": "dovey3",
+  //     "categorie": 'tata3',
+  //     "description": "grp3",
+  //     "image": "ma photo3",
+  //     "prix": "1000"
+  //   },
+  //   {
+  //     "nomProduit": "komi4",
+  //     "maladie": "dovey4",
+  //     "categorie": 'tata4',
+  //     "description": "grp4",
+  //     "image": "ma photo4",
+  //     "prix": "5000"
+  //   },
+  // ];
 
   void _handleRefreshButtonClick() {
     fetchData(); // Rafraîchir les données en appelant la fonction fetchData
@@ -136,7 +152,7 @@ class _AccueilClientState extends State<AccueilClient> {
                         child: SizedBox(
                           height: 40,
                           child: TextField(
-                            controller: search,
+                            controller: _searchController,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: const Color(0xFFEDEDED),
@@ -146,28 +162,18 @@ class _AccueilClientState extends State<AccueilClient> {
                                 borderSide: BorderSide.none,
                               ),
                               suffixIcon: IconButton(
-                                onPressed: () {
-                                  if (dataList.any((element) =>
-                                      element.containsKey("nomProduit"))) {
-                                    var tempA = dataList.map((e) {
-                                      if (e["nomProduit"] == search.text) {
-                                        return e;
-                                      }
-                                    }).toList();
-                                    setState(() =>
-                                        maVariable = "un element correspond");
-                                  }
-                                },
+                                onPressed: _performSearch,
                                 icon: const Icon(Icons.search),
                               ),
                             ),
+                            onSubmitted: (value) => _performSearch(),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                maVariable == null ? const SizedBox() : Text(maVariable),
+                // maVariable == null ? const SizedBox() : Text(maVariable),
                 const SizedBox(height: 10),
                 Stack(
                   children: [
@@ -185,11 +191,12 @@ class _AccueilClientState extends State<AccueilClient> {
                                 1.0, // Utilisez 1.0 pour occuper toute la largeur
                           ),
                           items: productsCaroussel.map((product) {
-                            return Image.network(
-                              product
-                                  .image, // Assurez-vous d'avoir la clé d'image correcte selon la structure de vos données
+                            return CachedNetworkImage(
+                              imageUrl: product.image,
                               fit: BoxFit.cover,
                               width: double.infinity,
+                              errorWidget: (context, url, error) =>
+                                  Icon(Icons.error),
                             );
                           }).toList(),
                         )),
@@ -213,7 +220,7 @@ class _AccueilClientState extends State<AccueilClient> {
                                 ),
                               ),
                               const SizedBox(
-                                width: 350,
+                                width: 300,
                                 child: Text(
                                   'Souscrivez à un abonnement pour bénéficier de plus de réductions sur vos achats',
                                   style: TextStyle(
@@ -259,10 +266,11 @@ class _AccueilClientState extends State<AccueilClient> {
                               SizedBox(
                                 width: 150,
                                 height: 150,
-                                child: Image.network(
-                                  products[index].image,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: CachedNetworkImage(
+  imageUrl: products[index].image,
+  fit: BoxFit.cover,
+)
+
                               ),
                               Positioned(
                                 bottom: -4,
@@ -553,7 +561,7 @@ class _AccueilClientState extends State<AccueilClient> {
                                         width: 2.0, // Largeur de la bordure
                                       ),
                                       borderRadius: BorderRadius.circular(
-                                          8.0), // Rayon des bords de la boîte
+                                          5), // Rayon des bords de la boîte
                                     ),
                                     child: Stack(
                                       children: [
@@ -573,13 +581,13 @@ class _AccueilClientState extends State<AccueilClient> {
                                             );
                                             // _changeColor(category);
                                           },
-                                          child: Image.network(
-                                            filteredProducts[productIndex]
-                                                .image,
-                                            fit: BoxFit.cover,
-                                            width: containerWidth,
-                                            height: 150,
-                                          ),
+                                          child: CachedNetworkImage(
+  imageUrl: filteredProducts[productIndex].image,
+  fit: BoxFit.cover,
+  width: containerWidth,
+  height: 150,
+)
+
                                         ),
                                         Positioned(
                                           bottom: 8,
